@@ -45,6 +45,10 @@ form input.display3 {
     font-size: 45px;
 }
 
-/* form input.AC {
-    width: 145px;
-} */
+.num-inputs input:hover  {
+    background-color: #333b48;
+}
+
+form input.equal, form input.operation, form input.dot, form input.AC, form input.DE {
+    color: #63ddd5;
+}
