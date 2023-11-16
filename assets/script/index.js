@@ -12,6 +12,10 @@ function select(selector, parent = document) {
     return parent.querySelector(selector);
 }
 
+function selectAll(selector, parent = document) {
+    return[...parent.querySelectorAll(selector)];
+}
+
 function create(element, parent = document) {
     return parent.createElement(element);
 }
@@ -20,73 +24,79 @@ function print(...args) {
     console.log(args.join(', '));
 }
 
-let points = 0;
-const scoreDisplay = selectById('score');
-const userAnswer = selectById('userAnswer');
-const question = selectById('question');
-const submit = selectById('submit');
-const timerDisplay = selectById('timer');
-scoreDisplay.innerText = `score: ${points}`;
-const opArr = ['+', '-', '*'];
+const equal = select('.equal');
+const display = selectById('display');
+const ac = select('.AC');
+const de = select('.DE');
+const numbers = selectAll('.number');
+const operations = selectAll('.operation');
 
-function generateQuestion() {
-    let randNum1 = Math.ceil(Math.random()*10);
-    let randNum2 = Math.ceil(Math.random()*10);
-    let randOp = Math.floor(Math.random() * opArr.length);
-    question.innerText = `${randNum1} ${opArr[randOp]} ${randNum2}`;
-    return { randNum1, randNum2, randOp };
+
+onEvent('load', window, () => {
+    display.value = '';
+});
+
+onEvent('click', ac, () => {
+    display.value = '';
+});
+
+onEvent('click', de, function deleteNum() {
+    display.value = display.value.toString().slice(0,-1);
+});
+
+numbers.forEach(number => {
+    onEvent('click', number, () => {
+        let value = number.value;
+        display.value += value;
+    });
+});
+
+operations.forEach(operation => {
+    onEvent('click', operation, () => {
+        display.value += operation.value;
+    });
+});
+
+function checkArray(str, arr) {
+    let count = 0;
+
+    for (let i = 0; i< str.length; i++) {
+        if (arr.includes(str[i])) {
+            count++;
+        }
+    }
+    if (count === 1) {
+        const newArr = arr.filter(char => str.includes(char));
+        return newArr;
+    } else if (count > 1) {
+        alert('You can only have 1 operation');
+        display.value = '';
+    } else {
+        alert('You need to have an operation');
+        display.value = '';
+    }
+    
 }
 
-let { randNum1, randNum2, randOp } = generateQuestion();
-
-let remainingTime = 5;
-let checkTime;
-
-function checkAnswer() {
-    remainingTime = 5;
-    let answer = parseFloat(userAnswer.value);
+onEvent('click', equal, () => {
+    const operationsArr = ['+', '-', '*'];
+    let value = display.value;
+    const opArr = checkArray(value, operationsArr);
+    let opIndex = value.indexOf(opArr[0]);
+    let firstNum = parseFloat(value.slice(0,opIndex));
+    let secondNum = parseFloat(value.slice(opIndex+1, ));
     let result;
-
-    switch (opArr[randOp]) {
+    let op = opArr[0];
+    switch (op) {
         case "+":
-            result = randNum1 + randNum2;
+            result = firstNum + secondNum;
             break;
         case "-":
-            result = randNum1 - randNum2;
+            result = firstNum - secondNum;
             break;
         default:
-            result = randNum1 * randNum2;
+            result = firstNum * secondNum;
             break;
     }
-
-    if (result === answer) {
-        points++;
-    } else if (points > 0){
-        points--;
-    }
-
-    userAnswer.value = '';
-    scoreDisplay.innerText = `score: ${points}`;
-
-    ({ randNum1, randNum2, randOp } = generateQuestion());
-}
-
-function timerFunction() {
-    remainingTime--;
-    timerDisplay.innerText = `Time: ${remainingTime} sec`;
-
-    if (remainingTime === 0) {
-        clearInterval(checkTime);
-        checkAnswer();
-        checkTime = setInterval(timerFunction, 1000);
-    }
-}
-
-checkTime = setInterval(timerFunction, 1000);
-
-onEvent('click', submit, (event) => {
-    event.preventDefault();
-    clearInterval(checkTime);
-    checkAnswer();
-    checkTime = setInterval(timerFunction, 1000);
+        display.value = result;
 });
